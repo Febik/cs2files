@@ -1,5 +1,5 @@
 local UI = {}
-
+UI.__index = UI
 -- Конфигурация
 UI.Config = {
     MainColor = Color3.fromRGB(35, 35, 45),
@@ -188,9 +188,89 @@ function UI:CreateWindow(title)
 
         return TabContent
     end
+	
+	 local windowObject = {
+        _screenGui = screenGui,
+        _mainFrame = mainFrame,
+        _tabsHolder = TabsHolder,
+        _contentHolder = ContentHolder,
+        _tabs = {}
+    }
+    setmetatable(windowObject, UI)
 
-    ScreenGui.Parent = game:GetService("CoreGui")
-    return MainFrame
+    -- Добавляем метод AddTab в объект окна
+    function windowObject:AddTab(name)
+        local tabButton = UI:Create("TextButton", {
+            Parent = self._tabsHolder,
+            Name = name .. "Tab",
+            Size = UI.Config.TabSize,
+            BackgroundColor3 = UI.Config.SecondaryColor,
+            Text = name,
+            TextColor3 = UI.Config.TextColor,
+            Font = UI.Config.Font,
+            TextSize = 14
+        })
+        UI:RoundedCorners(tabButton)
+
+        local tabContent = UI:Create("Frame", {
+            Parent = self._contentHolder,
+            Name = name .. "Content",
+            Size = UDim2.new(1, 0, 0, 0),
+            BackgroundTransparency = 1,
+            Visible = false
+        })
+
+        local tabLayout = UI:Create("UIListLayout", {
+            Parent = tabContent,
+            Padding = UDim.new(0, 10)
+        })
+
+        tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            tabContent.Size = UDim2.new(1, 0, 0, tabLayout.AbsoluteContentSize.Y)
+        end)
+
+        tabButton.MouseButton1Click:Connect(function()
+            for _, tab in pairs(self._tabs) do
+                tab.content.Visible = false
+            end
+            tabContent.Visible = true
+        end)
+
+        -- Сохраняем вкладку для управления
+        self._tabs[name] = {
+            button = tabButton,
+            content = tabContent
+        }
+
+        -- Активируем первую вкладку
+        if #self._tabsHolder:GetChildren() == 2 then -- 1 вкладка + UIListLayout
+            tabContent.Visible = true
+        end
+
+        function tabContent:AddElement(element)
+            element.Parent = tabContent
+            return element
+        end
+
+        return tabContent
+    end
+
+    -- Обработчики событий кнопок
+    MinimizeButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            mainFrame.Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 70)
+        else
+            mainFrame.Size = originalSize
+        end
+    end)
+
+    CloseButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    screenGui.Parent = game:GetService("CoreGui")
+    return windowObject
 end
 
 -- Элементы UI
