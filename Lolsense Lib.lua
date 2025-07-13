@@ -136,30 +136,32 @@ function UI:CreateWindow(title)
 
     -- Функции для работы с окном
     function MainFrame:AddTab(name)
-        local TabButton = self:Create("TextButton", {
-            Parent = TabsHolder,
-            Name = name .. "Tab",
-            Size = self.Config.TabSize,
-            BackgroundColor3 = self.Config.SecondaryColor,
-            Text = name,
-            TextColor3 = self.Config.TextColor,
-            Font = self.Config.Font,
-            TextSize = 14
-        })
-        self:RoundedCorners(TabButton)
+        local UI = getfenv().UI -- Получаем доступ к основной UI таблице
+    
+		local TabButton = UI:Create("TextButton", { -- Используем UI:Create вместо self:Create
+			Parent = TabsHolder,
+			Name = name .. "Tab",
+			Size = UI.Config.TabSize, -- Используем UI.Config
+			BackgroundColor3 = UI.Config.SecondaryColor,
+			Text = name,
+			TextColor3 = UI.Config.TextColor,
+			Font = UI.Config.Font,
+			TextSize = 14
+		})
+		UI:RoundedCorners(TabButton) -- Используем UI:RoundedCorners
 
-        local TabContent = self:Create("Frame", {
-            Parent = ContentHolder,
-            Name = name .. "Content",
-            Size = UDim2.new(1, 0, 0, 0),
-            BackgroundTransparency = 1,
-            Visible = false
-        })
+		local TabContent = UI:Create("Frame", {
+			Parent = ContentHolder,
+			Name = name .. "Content",
+			Size = UDim2.new(1, 0, 0, 0),
+			BackgroundTransparency = 1,
+			Visible = false
+		})
 
-        local TabLayout = self:Create("UIListLayout", {
-            Parent = TabContent,
-            Padding = UDim.new(0, 10)
-        })
+		local TabLayout = UI:Create("UIListLayout", {
+			Parent = TabContent,
+			Padding = UDim.new(0, 10)
+		})
 
         TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             TabContent.Size = UDim2.new(1, 0, 0, TabLayout.AbsoluteContentSize.Y)
